@@ -1,0 +1,4 @@
+{
+  "route_1": ["stop_1", "stop_2", "stop_3", "stop_4", "stop_5"],
+  "route_2": ["stop_5", "stop_4", "stop_3", "stop_2", "stop_1"]
+}

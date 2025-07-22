@@ -1,0 +1,27 @@
+{
+  "stop_1": {
+    "name": "Science Hill",
+    "lat": 37.0015,
+    "lon": -122.0625
+  },
+  "stop_2": {
+    "name": "Baskin Engineering",
+    "lat": 37.0031,
+    "lon": -122.0630
+  },
+  "stop_3": {
+    "name": "Cowell College",
+    "lat": 36.9984,
+    "lon": -122.0542
+  },
+  "stop_4": {
+    "name": "Crown College",
+    "lat": 36.9995,
+    "lon": -122.0535
+  },
+  "stop_5": {
+    "name": "Metro Center",
+    "lat": 36.9741,
+    "lon": -122.0308
+  }
+}

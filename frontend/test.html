@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ride Tracking Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .danger {
+            background-color: #dc3545;
+        }
+        .danger:hover {
+            background-color: #c82333;
+        }
+        .success {
+            background-color: #28a745;
+        }
+        .success:hover {
+            background-color: #218838;
+        }
+        .result {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .driver-item {
+            background-color: #e9ecef;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚗 Ride Tracking Backend Test</h1>
+    
+    <!-- Driver Section -->
+    <div class="container">
+        <h2>Driver Controls</h2>
+        <div class="form-group">
+            <label for="driverName">Driver Name:</label>
+            <input type="text" id="driverName" placeholder="Enter driver name" value="John Doe">
+        </div>
+        <div class="form-group">
+            <label for="driverLat">Latitude:</label>
+            <input type="number" id="driverLat" placeholder="37.7749" step="any" value="37.7749">
+        </div>
+        <div class="form-group">
+            <label for="driverLon">Longitude:</label>
+            <input type="number" id="driverLon" placeholder="-122.4194" step="any" value="-122.4194">
+        </div>
+        <button onclick="startDriver()">Start Driver</button>
+        <button onclick="stopDriver()" class="danger">Stop Driver</button>
+        <button onclick="getAllDrivers()" class="success">Get All Drivers</button>
+        <div id="driverResult" class="result" style="display: none;"></div>
+    </div>
+
+    <!-- Rider Section -->
+    <div class="container">
+        <h2>Rider Controls</h2>
+        <div class="form-group">
+            <label for="riderLat">Rider Latitude:</label>
+            <input type="number" id="riderLat" placeholder="37.7750" step="any" value="37.7750">
+        </div>
+        <div class="form-group">
+            <label for="riderLon">Rider Longitude:</label>
+            <input type="number" id="riderLon" placeholder="-122.4180" step="any" value="-122.4180">
+        </div>
+        <button onclick="findDrivers()">Find Nearby Drivers</button>
+        <div id="riderResult" class="result" style="display: none;"></div>
+    </div>
+
+    <!-- Active Drivers Display -->
+    <div class="container">
+        <h2>Active Drivers</h2>
+        <button onclick="refreshDrivers()">Refresh</button>
+        <div id="activeDrivers"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        let currentDriverId = null;
+
+        function showResult(elementId, data) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function startDriver() {
+            const name = document.getElementById('driverName').value;
+            const lat = parseFloat(document.getElementById('driverLat').value);
+            const lon = parseFloat(document.getElementById('driverLon').value);
+
+            if (!name || isNaN(lat) || isNaN(lon)) {
+                alert('Please fill in all driver fields');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/driver/start`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, lat, lon })
+                });
+
+                const data = await response.json();
+                showResult('driverResult', data);
+                
+                if (data.success) {
+                    currentDriverId = data.driver_id;
+                    refreshDrivers();
+                }
+            } catch (error) {
+                showResult('driverResult', { error: error.message });
+            }
+        }
+
+        async function stopDriver() {
+            if (!currentDriverId) {
+                alert('No active driver to stop');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/driver/stop`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ driver_id: currentDriverId })
+                });
+
+                const data = await response.json();
+                showResult('driverResult', data);
+                
+                if (data.success) {
+                    currentDriverId = null;
+                    refreshDrivers();
+                }
+            } catch (error) {
+                showResult('driverResult', { error: error.message });
+            }
+        }
+
+        async function getAllDrivers() {
+            try {
+                const response = await fetch(`${API_BASE}/drivers`);
+                const data = await response.json();
+                showResult('driverResult', data);
+            } catch (error) {
+                showResult('driverResult', { error: error.message });
+            }
+        }
+
+        async function findDrivers() {
+            const lat = parseFloat(document.getElementById('riderLat').value);
+            const lon = parseFloat(document.getElementById('riderLon').value);
+
+            if (isNaN(lat) || isNaN(lon)) {
+                alert('Please fill in rider location');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/rider?lat=${lat}&lon=${lon}`);
+                const data = await response.json();
+                showResult('riderResult', data);
+            } catch (error) {
+                showResult('riderResult', { error: error.message });
+            }
+        }
+
+        async function refreshDrivers() {
+            try {
+                const response = await fetch(`${API_BASE}/drivers`);
+                const data = await response.json();
+                
+                const container = document.getElementById('activeDrivers');
+                
+                if (data.success && data.drivers) {
+                    const drivers = Object.entries(data.drivers);
+                    
+                    if (drivers.length === 0) {
+                        container.innerHTML = '<p>No active drivers</p>';
+                    } else {
+                        container.innerHTML = drivers.map(([id, driver]) => `
+                            <div class="driver-item">
+                                <strong>${driver.name}</strong> (ID: ${id})<br>
+                                Location: ${driver.lat}, ${driver.lon}
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    container.innerHTML = '<p>Error loading drivers</p>';
+                }
+            } catch (error) {
+                document.getElementById('activeDrivers').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+
+        // Load drivers on page load
+        refreshDrivers();
+    </script>
+</body>
+</html>
