@@ -11,7 +11,7 @@ def create_app():
     app.config['DEBUG'] = os.environ.get('FLASK_DEBUG', 'True').lower() == 'true'
     
     # Enable CORS for all routes
-    CORS(app, origins=["http://localhost:3000", "http://127.0.0.1:3000"])
+    CORS(app, origins=["http://localhost:3000", "http://127.0.0.1:3000", "https://slug-stop.vercel.app"])
     
     # Register blueprints
     from backend.routes.driver_routes import driver_bp
