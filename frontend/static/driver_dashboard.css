@@ -1,0 +1,102 @@
+body {
+    margin: 0;
+    font-family: 'Inter', 'Roboto', Arial, sans-serif;
+    background: #f5f6fa;
+}
+
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: #003366;
+    color: #ffd700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3em;
+    font-weight: 700;
+    z-index: 1002;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    letter-spacing: 0.5px;
+}
+
+.home-btn {
+    position: absolute;
+    right: 20px;
+    color: #ffd700;
+    text-decoration: none;
+    font-size: 0.9em;
+    font-weight: 500;
+    padding: 8px 16px;
+    border: 1px solid #ffd700;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.home-btn:hover {
+    background: #ffd700;
+    color: #003366;
+}
+
+.floating-card {
+    position: fixed;
+    top: 80px;
+    left: 20px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    z-index: 1000;
+    min-width: 250px;
+    max-width: 300px;
+}
+
+.floating-card div {
+    margin-bottom: 15px;
+    font-size: 1em;
+    color: #333;
+}
+
+.floating-card button {
+    background: #003366;
+    color: #ffd700;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin: 5px 0;
+    font-weight: 600;
+}
+
+.floating-card button:hover {
+    background: #004080;
+    transform: translateY(-2px);
+}
+
+#map {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+}
+
+#logoutBtn {
+    background: #dc3545;
+    color: white;
+}
+
+#logoutBtn:hover {
+    background: #c82333;
+}
+
+#driverName {
+    font-weight: bold;
+    color: #003366;
+}

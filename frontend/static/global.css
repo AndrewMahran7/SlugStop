@@ -1,0 +1,104 @@
+/* Global styles for home buttons */
+.home-btn {
+    position: absolute;
+    right: 20px;
+    color: #ffd700;
+    text-decoration: none;
+    font-size: 0.9em;
+    font-weight: 500;
+    padding: 8px 16px;
+    border: 1px solid #ffd700;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.home-btn:hover {
+    background: #ffd700;
+    color: #003366;
+}
+
+/* Error styling */
+.error {
+    color: #ff4444;
+    background: #ffe6e6;
+    padding: 10px;
+    border-radius: 6px;
+    margin: 10px 0;
+    border: 1px solid #ff4444;
+}
+
+/* Container styling */
+.container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Button styling */
+button {
+    background: #003366;
+    color: #ffd700;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background: #004080;
+    transform: translateY(-2px);
+}
+
+/* Form styling */
+input[type="text"], input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1em;
+    margin: 8px 0;
+}
+
+/* List styling */
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    background: white;
+    margin: 8px 0;
+    padding: 12px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Driver info styling */
+.driver-info {
+    text-align: center;
+}
+
+.driver-info strong {
+    display: block;
+    font-size: 1.1em;
+    margin-bottom: 8px;
+}
+
+/* Info panel for tracking */
+.info-panel {
+    background: white;
+    padding: 15px;
+    margin: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.eta-overlay {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #003366;
+    margin-top: 10px;
+}

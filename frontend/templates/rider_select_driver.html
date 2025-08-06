@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Select Driver | SlugStop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/static/rider.css">
+</head>
+<body>
+    <div class="header">
+        Select Driver
+        <a href="/" class="home-btn">Home</a>
+    </div>
+    <div class="container">
+        <h3>Stop: <span id="stopName">Loading...</span></h3>
+        <h3>Available Drivers:</h3>
+        <ul id="driversList">
+            <!-- Populated by JavaScript -->
+        </ul>
+        <div id="noDrivers" style="display: none;">
+            <p>No drivers are currently active. Please try again later.</p>
+            <button onclick="window.location.href='/rider'">Go Back</button>
+        </div>
+    </div>
+    
+    <script>
+        // Get URL parameters
+        function getUrlParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+        
+        // Load driver information
+        document.addEventListener('DOMContentLoaded', function() {
+            const stopName = getUrlParam('stop_name');
+            const driversData = getUrlParam('drivers');
+            const stopLat = getUrlParam('stop_lat');
+            const stopLon = getUrlParam('stop_lon');
+            
+            if (stopName) {
+                document.getElementById('stopName').textContent = stopName;
+            }
+            
+            if (driversData) {
+                try {
+                    const drivers = JSON.parse(driversData);
+                    populateDriversList(drivers, stopLat, stopLon);
+                } catch (error) {
+                    console.error('Error parsing drivers data:', error);
+                    document.getElementById('noDrivers').style.display = 'block';
+                }
+            } else {
+                document.getElementById('noDrivers').style.display = 'block';
+            }
+        });
+        
+        // Populate drivers list
+        function populateDriversList(drivers, stopLat, stopLon) {
+            const driversListEl = document.getElementById('driversList');
+            
+            if (drivers.length === 0) {
+                document.getElementById('noDrivers').style.display = 'block';
+                return;
+            }
+            
+            drivers.forEach(driver => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div class="driver-info">
+                        <strong>${driver.name}</strong><br>
+                        ETA: ${driver.eta} minutes<br>
+                        <button onclick="trackDriver('${driver.name}', ${stopLat}, ${stopLon})">Track This Driver</button>
+                    </div>
+                `;
+                driversListEl.appendChild(li);
+            });
+        }
+        
+        // Track selected driver
+        function trackDriver(driverName, stopLat, stopLon) {
+            const params = new URLSearchParams({
+                driver: driverName,
+                stop_lat: stopLat,
+                stop_lon: stopLon
+            });
+            
+            window.location.href = `/track?${params.toString()}`;
+        }
+    </script>
+</body>
+</html>

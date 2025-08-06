@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Driver Login | SlugStop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/static/driver_login.css">
+</head>
+<body>
+    <div class="header">
+        Driver Login
+        <a href="/" class="home-btn">Home</a>
+    </div>
+    <form id="loginForm">
+        <div id="error" class="error" style="display: none;"></div>
+        <input type="text" id="name" name="name" placeholder="Driver Name" required>
+        <input type="text" id="code" name="code" placeholder="Driver Code" required>
+        <button type="submit">Start Tracking</button>
+    </form>
+    <script>
+        document.getElementById('loginForm').onsubmit = async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('name').value,
+                code: document.getElementById('code').value
+            };
+            
+            try {
+                const response = await fetch('/api/driver/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    window.location.href = '/driver-dashboard';
+                } else {
+                    document.getElementById('error').textContent = data.error;
+                    document.getElementById('error').style.display = 'block';
+                }
+            } catch (error) {
+                document.getElementById('error').textContent = 'Login failed. Please try again.';
+                document.getElementById('error').style.display = 'block';
+            }
+        };
+    </script>
+</body>
+</html>

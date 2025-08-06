@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Select Bus to Track</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+            background: #f5f6fa;
+        }
+        .header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 56px;
+            background: #222;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+            font-weight: 500;
+            z-index: 1002;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            letter-spacing: 0.5px;
+        }
+        .bus-list {
+            background: #fff;
+            padding: 2em;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+            margin-top: 80px;
+            min-width: 220px;
+            max-width: 90vw;
+        }
+        .bus-item {
+            margin-bottom: 1.5em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .bus-name {
+            font-size: 1.1em;
+            font-weight: 500;
+            color: #222;
+        }
+        .track-btn {
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5em 1.2em;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: background 0.2s;
+        }
+        .track-btn:hover {
+            background: #0056b3;
+        }
+        @media (max-width: 600px) {
+            .header { font-size: 1em; height: 48px; }
+            .bus-list { padding: 1em; border-radius: 10px; margin-top: 60px; }
+            .track-btn { font-size: 0.95em; padding: 0.4em 0.8em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">Select Bus to Track</div>
+    <div class="bus-list">
+        <h2 style="margin-top:0;">Select a Bus to Track</h2>
+        {% if buses %}
+            {% for bus in buses %}
+                <div class="bus-item">
+                    <span class="bus-name">{{ bus.name }}</span>
+                    <a class="track-btn" href="/track?lat={{ bus.lat }}&lon={{ bus.lon }}&bus={{ bus.name }}">Track</a>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div>No active buses available.</div>
+        {% endif %}
+    </div>
+</body>
+</html>

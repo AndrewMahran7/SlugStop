@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Find Closest Stop | SlugStop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/static/rider.css">
+</head>
+<body>
+    <div class="header">
+        Find Your Stop
+        <a href="/" class="home-btn">Home</a>
+    </div>
+    <div class="container">
+        <button id="locateBtn">Find Closest Stop</button>
+        <div id="loading" style="display: none;">Finding your location...</div>
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <h3>Or select a stop manually:</h3>
+        <ul id="stopsList">
+            <!-- Populated by JavaScript -->
+        </ul>
+    </div>
+    
+    <script>
+        let stops = [];
+        
+        // Load stops on page load
+        async function loadStops() {
+            try {
+                const response = await fetch('/api/rider/stops');
+                stops = await response.json();
+                populateStopsList();
+            } catch (error) {
+                console.error('Error loading stops:', error);
+            }
+        }
+        
+        // Populate manual stops selection
+        function populateStopsList() {
+            const stopsListEl = document.getElementById('stopsList');
+            stopsListEl.innerHTML = '';
+            
+            stops.forEach(stop => {
+                const li = document.createElement('li');
+                li.innerHTML = `<button onclick="selectStop(${stop.lat}, ${stop.lon}, '${stop.name}')">${stop.name}</button>`;
+                stopsListEl.appendChild(li);
+            });
+        }
+        
+        // Select stop manually
+        function selectStop(lat, lon, name) {
+            window.location.href = `/rider-confirm?lat=${lat}&lon=${lon}&stop_name=${encodeURIComponent(name)}`;
+        }
+        
+        // Find closest stop automatically
+        document.getElementById('locateBtn').onclick = async function() {
+            if (!navigator.geolocation) {
+                document.getElementById('error').textContent = 'Geolocation not supported by your browser.';
+                document.getElementById('error').style.display = 'block';
+                return;
+            }
+            
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            
+            navigator.geolocation.getCurrentPosition(async function(pos) {
+                try {
+                    const response = await fetch('/api/rider/find-closest', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            lat: pos.coords.latitude,
+                            lon: pos.coords.longitude
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.stop) {
+                        window.location.href = `/rider-confirm?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&stop_lat=${data.stop.lat}&stop_lon=${data.stop.lon}&stop_name=${encodeURIComponent(data.stop.name)}`;
+                    }
+                } catch (error) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('error').textContent = 'Error finding closest stop. Please try again.';
+                    document.getElementById('error').style.display = 'block';
+                }
+            }, function(error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').textContent = 'Could not get your location. Please try again or select a stop manually.';
+                document.getElementById('error').style.display = 'block';
+            });
+        };
+        
+        // Load stops when page loads
+        document.addEventListener('DOMContentLoaded', loadStops);
+    </script>
+</body>
+</html>

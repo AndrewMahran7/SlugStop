@@ -1,0 +1,35 @@
+{
+  "stops": [
+    {
+      "name": "Roundabout",
+      "lat": 33.570721,
+      "lon": -117.638597
+    },
+    {
+      "name": "CV1",
+      "lat": 33.56643,
+      "lon": -117.631989
+    },
+    {
+      "name": "CV2",
+      "lat": 33.565071,
+      "lon": -117.643576
+    }
+  ],
+  "routes": [
+    {
+      "name": "Driver1",
+      "stops": [],
+      "driver": "John"
+    },
+    {
+      "name": "Driver1",
+      "stops": [
+        "CV1",
+        "CV2",
+        "Roundabout"
+      ],
+      "driver": "John"
+    }
+  ]
+}
