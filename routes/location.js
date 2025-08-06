@@ -19,12 +19,11 @@ router.post('/', validateLocation, async (req, res) => {
     // Create new location record
     const location = new BusLocation({
       driver: driver._id,
-      location: {
-        latitude: lat,
-        longitude: lon
-      },
       timestamp: timestamp ? new Date(timestamp) : new Date()
     });
+    
+    // Set coordinates using helper method
+    location.setCoordinates(lat, lon);
     
     await location.save();
     
@@ -45,7 +44,7 @@ router.get('/', async (req, res) => {
   try {
     const activeDrivers = await Driver.find({ 
       isActive: true,
-      'currentLocation.latitude': { $exists: true }
+      'currentLocation.coordinates': { $exists: true }
     }).select('name currentLocation');
     
     const locationData = {};

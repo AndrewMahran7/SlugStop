@@ -4,7 +4,7 @@ const Stop = require('../models/Stop');
 const Route = require('../models/Route');
 const Driver = require('../models/Driver');
 const { validateStop, validateRoute } = require('../middleware/validation');
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { authenticateToken, requireAdmin, generateToken } = require('../middleware/auth');
 const { logger } = require('../middleware/logger');
 
 // Admin login route
@@ -32,7 +32,6 @@ router.post('/login', async (req, res) => {
     await admin.save();
     
     // Generate token
-    const { generateToken } = require('../middleware/auth');
     const token = generateToken({
       id: admin._id,
       name: admin.name,
@@ -182,39 +181,6 @@ router.post('/save_stop', validateStop, async (req, res) => {
     res.status(500).json({ error: 'Failed to save stop' });
   }
 });
-    
-    const stop = new Stop({
-      name: name.trim(),
-      location: {
-        latitude: parseFloat(lat),
-        longitude: parseFloat(lon)
-      }
-    });
-    
-    await stop.save();
-    
-    logger.info('Stop created', {
-      stopId: stop._id,
-      name: stop.name,
-      adminId: req.user.id
-    });
-    
-    res.json({ 
-      message: 'Stop saved successfully',
-      stop: {
-        id: stop._id,
-        name: stop.name,
-        lat: stop.location.coordinates[1],
-        lon: stop.location.coordinates[0],
-        description: stop.description
-      }
-    });
-    
-  } catch (error) {
-    logger.error('Save stop error:', error);
-    res.status(500).json({ error: 'Failed to save stop' });
-  }
-});
 
 // Get all drivers
 router.get('/drivers', async (req, res) => {
@@ -270,16 +236,10 @@ router.post('/save_route', validateRoute, async (req, res) => {
   try {
     const { route_name, stops, driver } = req.body;
     
-    // Find or create driver
-    let driverDoc = await Driver.findOne({ name: driver.trim() });
+    // Find driver
+    let driverDoc = await Driver.findOne({ name: driver.trim(), role: 'driver' });
     if (!driverDoc) {
-      // Create new driver with a default code
-      driverDoc = new Driver({ 
-        name: driver.trim(), 
-        code: Math.random().toString(36).substring(7) // Generate random code
-      });
-      await driverDoc.save();
-      logger.info(`New driver created: ${driver}`);
+      return res.status(400).json({ error: 'Driver not found' });
     }
     
     // Find stop IDs
@@ -308,20 +268,23 @@ router.post('/save_route', validateRoute, async (req, res) => {
     });
     
     await route.save();
-    logger.info(`New route created: ${route_name}`);
     
-    // Return updated routes list
-    const routes = await Route.find({ isActive: true })
-      .populate('driver')
-      .populate('stops.stop');
-    
-    const formattedRoutes = routes.map(route => ({
+    logger.info('Route created', {
+      routeId: route._id,
       name: route.name,
-      driver: route.driver.name,
-      stops: route.stops.map(s => s.stop.name)
-    }));
+      adminId: req.user.id
+    });
     
-    res.json({ success: true, routes: formattedRoutes });
+    res.json({ 
+      message: 'Route saved successfully',
+      route: {
+        id: route._id,
+        name: route.name,
+        driver: driverDoc.name,
+        stops: stops
+      }
+    });
+    
   } catch (error) {
     logger.error('Save route error:', error);
     res.status(500).json({ error: 'Failed to save route' });

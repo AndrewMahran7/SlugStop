@@ -9,17 +9,22 @@ const stopSchema = new mongoose.Schema({
         maxlength: 100
     },
     location: {
-        latitude: {
-            type: Number,
-            required: true,
-            min: -90,
-            max: 90
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point'
         },
-        longitude: {
-            type: Number,
+        coordinates: {
+            type: [Number],
             required: true,
-            min: -180,
-            max: 180
+            validate: {
+                validator: function(coords) {
+                    return coords.length === 2 && 
+                           coords[1] >= -90 && coords[1] <= 90 &&  // latitude
+                           coords[0] >= -180 && coords[0] <= 180;  // longitude
+                },
+                message: 'Coordinates must be [longitude, latitude] with valid ranges'
+            }
         }
     },
     isActive: {
@@ -34,11 +39,28 @@ const stopSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Create index for geospatial queries
-stopSchema.index({ "location": "2dsphere" });
+// Create geospatial index
+stopSchema.index({ location: "2dsphere" });
+
+// Virtual properties for easier access
+stopSchema.virtual('latitude').get(function() {
+    return this.location.coordinates[1];
+});
+
+stopSchema.virtual('longitude').get(function() {
+    return this.location.coordinates[0];
+});
+
+// Method to set coordinates
+stopSchema.methods.setCoordinates = function(latitude, longitude) {
+    this.location = {
+        type: 'Point',
+        coordinates: [longitude, latitude]
+    };
+};
 
 // Method to find nearby stops
-stopSchema.statics.findNearby = function(latitude, longitude, maxDistance = 1000) {
+stopSchema.statics.findNearby = function(longitude, latitude, maxDistance = 1000) {
     return this.find({
         location: {
             $near: {

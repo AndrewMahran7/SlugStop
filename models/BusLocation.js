@@ -7,17 +7,22 @@ const busLocationSchema = new mongoose.Schema({
         required: true
     },
     location: {
-        latitude: {
-            type: Number,
-            required: true,
-            min: -90,
-            max: 90
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point'
         },
-        longitude: {
-            type: Number,
+        coordinates: {
+            type: [Number],
             required: true,
-            min: -180,
-            max: 180
+            validate: {
+                validator: function(coords) {
+                    return coords.length === 2 && 
+                           coords[1] >= -90 && coords[1] <= 90 &&  // latitude
+                           coords[0] >= -180 && coords[0] <= 180;  // longitude
+                },
+                message: 'Coordinates must be [longitude, latitude] with valid ranges'
+            }
         }
     },
     timestamp: {
@@ -45,6 +50,23 @@ const busLocationSchema = new mongoose.Schema({
 // Create index for geospatial queries
 busLocationSchema.index({ "location": "2dsphere" });
 busLocationSchema.index({ "driver": 1, "timestamp": -1 });
+
+// Virtual properties for easier access
+busLocationSchema.virtual('latitude').get(function() {
+    return this.location.coordinates[1];
+});
+
+busLocationSchema.virtual('longitude').get(function() {
+    return this.location.coordinates[0];
+});
+
+// Method to set coordinates
+busLocationSchema.methods.setCoordinates = function(latitude, longitude) {
+    this.location = {
+        type: 'Point',
+        coordinates: [longitude, latitude]
+    };
+};
 
 // Method to get latest location for driver
 busLocationSchema.statics.getLatestLocation = function(driverId) {

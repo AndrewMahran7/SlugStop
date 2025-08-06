@@ -24,36 +24,36 @@ const seedData = async () => {
         ]);
         logger.info('Created default drivers');
 
-        // Create default stops
+        // Create default stops with GeoJSON Point format
         const stops = await Stop.create([
             { 
                 name: 'East Remote', 
-                location: { latitude: 33.56842576541127, longitude: -117.63200957809731 },
+                location: { type: 'Point', coordinates: [-117.63200957809731, 33.56842576541127] },
                 description: 'East Remote Parking Lot'
             },
             { 
                 name: 'Science Hill', 
-                location: { latitude: 36.9991, longitude: -122.0586 },
+                location: { type: 'Point', coordinates: [-122.0586, 36.9991] },
                 description: 'Science Hill Campus'
             },
             { 
                 name: 'Bookstore', 
-                location: { latitude: 36.9741, longitude: -122.0308 },
+                location: { type: 'Point', coordinates: [-122.0308, 36.9741] },
                 description: 'Campus Bookstore'
             },
             { 
                 name: 'Roundabout', 
-                location: { latitude: 33.570721, longitude: -117.638597 },
+                location: { type: 'Point', coordinates: [-117.638597, 33.570721] },
                 description: 'Main Campus Roundabout'
             },
             { 
                 name: 'CV1', 
-                location: { latitude: 33.56643, longitude: -117.631989 },
+                location: { type: 'Point', coordinates: [-117.631989, 33.56643] },
                 description: 'Campus Village 1'
             },
             { 
                 name: 'CV2', 
-                location: { latitude: 33.565071, longitude: -117.643576 },
+                location: { type: 'Point', coordinates: [-117.643576, 33.565071] },
                 description: 'Campus Village 2'
             }
         ]);

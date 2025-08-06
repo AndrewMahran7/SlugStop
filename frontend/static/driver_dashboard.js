@@ -5,8 +5,8 @@ let map, currentMarker;
 async function checkSession() {
     try {
         const response = await fetch('/api/driver/session');
-        const data = await response.json();
-        if (data.driver_name) {
+        if (response.ok) {
+            const data = await response.json();
             driverName = data.driver_name;
             document.getElementById('driverName').textContent = driverName;
             initMap();
@@ -42,7 +42,13 @@ document.getElementById('startBtn').onclick = function() {
             if (currentMarker) {
                 map.removeLayer(currentMarker);
             }
-            currentMarker = L.marker([lat, lon]).addTo(map);
+            currentMarker = L.marker([lat, lon], {
+                icon: L.icon({
+                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/61/61168.png',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                })
+            }).addTo(map).bindPopup(`Driver: ${driverName}`);
             map.setView([lat, lon], 15);
             
             // Send location to server
@@ -60,6 +66,7 @@ document.getElementById('startBtn').onclick = function() {
             });
         }, err => {
             console.error('Geolocation error:', err);
+            alert('Error getting location: ' + err.message);
         }, {enableHighAccuracy: true, maximumAge: 0, timeout: 10000});
     } else {
         alert('Geolocation is not supported by this browser.');
@@ -81,7 +88,16 @@ document.getElementById('stopBtn').onclick = function() {
 // Logout button
 document.getElementById('logoutBtn').onclick = async function() {
     try {
-        await fetch('/api/driver/logout', { method: 'POST' });
+        // Stop tracking first
+        if (watchId) {
+            navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+        }
+        
+        await fetch('/api/driver/logout', { 
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        });
         window.location.href = '/';
     } catch (error) {
         console.error('Logout error:', error);

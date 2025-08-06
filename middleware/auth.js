@@ -28,8 +28,8 @@ const authenticateToken = (req, res, next) => {
 
     if (!token) {
         logger.warn('Authentication failed: No token provided', { 
-            ip: req.ip, 
-            userAgent: req.get('User-Agent') 
+            ip: req.ip,
+            path: req.path
         });
         return res.status(401).json({ error: 'Access token required' });
     }
@@ -41,10 +41,29 @@ const authenticateToken = (req, res, next) => {
     } catch (error) {
         logger.warn('Authentication failed: Invalid token', { 
             error: error.message,
-            ip: req.ip 
+            ip: req.ip,
+            path: req.path
         });
         return res.status(403).json({ error: 'Invalid or expired token' });
     }
+};
+
+const requireAdmin = (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    if (req.user.role !== 'admin') {
+        logger.warn('Admin access denied', { 
+            userId: req.user.id,
+            role: req.user.role,
+            ip: req.ip,
+            path: req.path
+        });
+        return res.status(403).json({ error: 'Admin access required' });
+    }
+    
+    next();
 };
 
 const requireRole = (roles) => {
@@ -72,5 +91,6 @@ module.exports = {
     hashPassword,
     comparePassword,
     authenticateToken,
+    requireAdmin,
     requireRole
 };
