@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>METRO Routes - SlugStop</title>
+    <link rel="stylesheet" href="/static/track.css">
+    <style>
+        .metro-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .route-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .route-header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .route-info h2 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .route-info p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+        }
+
+        .route-frequency {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .stops-list {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        .stop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.3s;
+        }
+
+        .stop-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .stop-item:last-child {
+            border-bottom: none;
+        }
+
+        .stop-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .stop-sequence {
+            background: #007bff;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 0.9em;
+        }
+
+        .stop-name {
+            font-weight: 500;
+        }
+
+        .eta-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
+        }
+
+        .eta-time {
+            font-weight: bold;
+            color: #28a745;
+            font-size: 1.1em;
+        }
+
+        .eta-source {
+            font-size: 0.8em;
+            color: #6c757d;
+            text-transform: uppercase;
+        }
+
+        .refresh-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .refresh-btn:hover {
+            background: #218838;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px;
+        }
+
+        .route-filter {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #007bff;
+            background: white;
+            color: #007bff;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="metro-container">
+        <div class="header">
+            <h1>🚌 Santa Cruz METRO Routes</h1>
+            <p>Real-time bus arrival information for UCSC and Santa Cruz area</p>
+        </div>
+
+        <div class="route-filter">
+            <button class="filter-btn active" data-filter="all">All Routes</button>
+            <button class="filter-btn" data-filter="ucsc">UCSC Routes</button>
+            <button class="filter-btn" data-filter="regional">Regional Routes</button>
+            <button class="refresh-btn" onclick="refreshAllETAs()">🔄 Refresh All ETAs</button>
+        </div>
+
+        <div id="routes-container" class="loading">
+            <div>Loading METRO routes...</div>
+        </div>
+    </div>
+
+    <script>
+        let allRoutes = [];
+        
+        // Load routes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRoutes();
+            
+            // Set up filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    filterRoutes(this.dataset.filter);
+                });
+            });
+        });
+
+        async function loadRoutes() {
+            try {
+                const response = await fetch('/api/metro/routes');
+                const data = await response.json();
+                
+                if (data.success) {
+                    allRoutes = data.routes;
+                    displayRoutes(allRoutes);
+                    loadETAsForAllRoutes();
+                } else {
+                    showError('Failed to load routes');
+                }
+            } catch (error) {
+                console.error('Error loading routes:', error);
+                showError('Error loading routes');
+            }
+        }
+
+        function filterRoutes(filter) {
+            let filteredRoutes = allRoutes;
+            
+            if (filter === 'ucsc') {
+                filteredRoutes = allRoutes.filter(route => 
+                    ['11', '18', '19', '20'].includes(route.routeId)
+                );
+            } else if (filter === 'regional') {
+                filteredRoutes = allRoutes.filter(route => 
+                    ['1', '2', '35', '75', '17'].includes(route.routeId)
+                );
+            }
+            
+            displayRoutes(filteredRoutes);
+        }
+
+        function displayRoutes(routes) {
+            const container = document.getElementById('routes-container');
+            
+            if (routes.length === 0) {
+                container.innerHTML = '<div class="loading">No routes found</div>';
+                return;
+            }
+
+            container.innerHTML = routes.map(route => `
+                <div class="route-card" data-route-id="${route.routeId}">
+                    <div class="route-header">
+                        <div class="route-info">
+                            <h2>Route ${route.routeId}</h2>
+                            <p>${route.name}</p>
+                        </div>
+                        <div class="route-frequency">
+                            Every ${route.headway} min
+                        </div>
+                    </div>
+                    <ul class="stops-list">
+                        ${route.stops.map(stop => `
+                            <li class="stop-item" data-stop-id="${stop.id}">
+                                <div class="stop-info">
+                                    <div class="stop-sequence">${stop.sequence}</div>
+                                    <div class="stop-name">${stop.name}</div>
+                                </div>
+                                <div class="eta-info" id="eta-${route.routeId}-${stop.id}">
+                                    <div class="eta-time">Loading...</div>
+                                    <div class="eta-source"></div>
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `).join('');
+        }
+
+        async function loadETAsForAllRoutes() {
+            for (const route of allRoutes) {
+                await loadETAsForRoute(route.routeId);
+            }
+        }
+
+        async function loadETAsForRoute(routeId) {
+            try {
+                const response = await fetch(`/api/metro/routes/${routeId}/etas`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    data.stops.forEach(stopData => {
+                        updateETADisplay(routeId, stopData.stop.id, stopData.eta);
+                    });
+                }
+            } catch (error) {
+                console.error(`Error loading ETAs for route ${routeId}:`, error);
+            }
+        }
+
+        function updateETADisplay(routeId, stopId, eta) {
+            const etaElement = document.getElementById(`eta-${routeId}-${stopId}`);
+            if (!etaElement) return;
+
+            if (eta && eta.best !== null) {
+                const minutes = eta.best;
+                const timeText = minutes < 1 ? 'Now' : 
+                                minutes === 1 ? '1 min' : `${minutes} mins`;
+                
+                etaElement.innerHTML = `
+                    <div class="eta-time">${timeText}</div>
+                    <div class="eta-source">${eta.source}</div>
+                `;
+                
+                // Color coding based on ETA
+                const etaTime = etaElement.querySelector('.eta-time');
+                if (minutes < 2) {
+                    etaTime.style.color = '#dc3545'; // Red for urgent
+                } else if (minutes < 5) {
+                    etaTime.style.color = '#ffc107'; // Yellow for soon
+                } else {
+                    etaTime.style.color = '#28a745'; // Green for normal
+                }
+            } else {
+                etaElement.innerHTML = `
+                    <div class="eta-time">--</div>
+                    <div class="eta-source">No data</div>
+                `;
+            }
+        }
+
+        async function refreshAllETAs() {
+            const refreshBtn = document.querySelector('.refresh-btn');
+            refreshBtn.textContent = '🔄 Refreshing...';
+            refreshBtn.disabled = true;
+            
+            await loadETAsForAllRoutes();
+            
+            refreshBtn.textContent = '🔄 Refresh All ETAs';
+            refreshBtn.disabled = false;
+        }
+
+        function showError(message) {
+            document.getElementById('routes-container').innerHTML = `
+                <div class="error">
+                    <strong>Error:</strong> ${message}
+                </div>
+            `;
+        }
+
+        // Auto-refresh ETAs every 30 seconds
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                loadETAsForAllRoutes();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

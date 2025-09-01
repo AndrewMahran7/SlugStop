@@ -27,10 +27,13 @@ const authenticateToken = (req, res, next) => {
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
-        logger.warn('Authentication failed: No token provided', { 
-            ip: req.ip,
-            path: req.path
-        });
+        // Only log warnings for API routes, not public pages
+        if (req.path.startsWith('/api/') || req.path.startsWith('/admin/')) {
+            logger.warn('Authentication failed: No token provided', { 
+                ip: req.ip,
+                path: req.path
+            });
+        }
         return res.status(401).json({ error: 'Access token required' });
     }
 

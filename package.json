@@ -4,16 +4,11 @@
   "description": "UCSC Campus Bus Tracking System",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "NODE_ENV=production node app.js",
     "dev": "nodemon app.js",
-    "seed": "node seed.js",
-    "reset": "npm run seed",
-    "setup-admin": "node create-admin.js",
-    "setup-drivers": "node create-admin.js --drivers-only",
-    "setup-all": "node create-admin.js",
-    "update-stops": "node update-stops.js",
-    "generate-qr": "node generate-qr-codes.js",
-    "admin-setup": "node setup-admin.js"
+    "setup": "node scripts/seedMetroRoutes.js",
+    "setup-admin": "node scripts/setupAdmin.js",
+    "health": "curl http://localhost:3000/health || echo 'Server not responding'"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

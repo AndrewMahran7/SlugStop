@@ -13,7 +13,7 @@ const driverSchema = new mongoose.Schema({
         required: true,
         unique: true,
         minlength: 4,
-        maxlength: 20
+        maxlength: 255 // Increased to accommodate bcrypt hashes (~60 chars)
     },
     role: {
         type: String,

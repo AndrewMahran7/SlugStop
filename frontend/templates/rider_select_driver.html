@@ -1,90 +1,369 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Select Driver | SlugStop</title>
+    <title>Find Buses | SlugStop</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="/static/rider.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 60vh;
+            width: 100%;
+            margin: 10px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .bus-info-panel {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .nearest-bus {
+            background: #e8f5e8;
+            border-left: 4px solid #28a745;
+        }
+        
+        .eta-display {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+        
+        .eta-item {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            flex: 1;
+            margin: 0 5px;
+        }
+        
+        .eta-realtime {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .eta-scheduled {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .bus-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+        }
+        
+        .track-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .track-btn:hover {
+            background: #0056b3;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+        
+        .location-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
 </head>
 <body>
     <div class="header">
-        Select Driver
+        🚌 Find Buses Near You
         <a href="/" class="home-btn">Home</a>
     </div>
+    
     <div class="container">
-        <h3>Stop: <span id="stopName">Loading...</span></h3>
-        <h3>Available Drivers:</h3>
-        <ul id="driversList">
-            <!-- Populated by JavaScript -->
-        </ul>
-        <div id="noDrivers" style="display: none;">
-            <p>No drivers are currently active. Please try again later.</p>
-            <button onclick="window.location.href='/rider'">Go Back</button>
+        <div class="location-info" id="locationInfo">
+            <strong>📍 Your Location:</strong> <span id="userLocation">Getting location...</span>
+        </div>
+        
+        <div id="map"></div>
+        
+        <div id="busesContainer">
+            <div class="loading">Finding nearby buses...</div>
         </div>
     </div>
     
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
+        let map;
+        let userMarker;
+        let busMarkers = [];
+        let routeLines = [];
+        let userLat, userLon;
+        
         // Get URL parameters
         function getUrlParam(param) {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(param);
         }
         
-        // Load driver information
+        // Initialize map and load data
         document.addEventListener('DOMContentLoaded', function() {
-            const stopName = getUrlParam('stop_name');
-            const driversData = getUrlParam('drivers');
-            const stopLat = getUrlParam('stop_lat');
-            const stopLon = getUrlParam('stop_lon');
+            // Get user location from URL or browser
+            userLat = parseFloat(getUrlParam('lat'));
+            userLon = parseFloat(getUrlParam('lon'));
             
-            if (stopName) {
-                document.getElementById('stopName').textContent = stopName;
-            }
-            
-            if (driversData) {
-                try {
-                    const drivers = JSON.parse(driversData);
-                    populateDriversList(drivers, stopLat, stopLon);
-                } catch (error) {
-                    console.error('Error parsing drivers data:', error);
-                    document.getElementById('noDrivers').style.display = 'block';
-                }
+            if (userLat && userLon) {
+                initializeMap();
+                loadNearbyBuses();
             } else {
-                document.getElementById('noDrivers').style.display = 'block';
+                getUserLocation();
             }
         });
         
-        // Populate drivers list
-        function populateDriversList(drivers, stopLat, stopLon) {
-            const driversListEl = document.getElementById('driversList');
-            
-            if (drivers.length === 0) {
-                document.getElementById('noDrivers').style.display = 'block';
-                return;
+        function getUserLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        userLat = position.coords.latitude;
+                        userLon = position.coords.longitude;
+                        initializeMap();
+                        loadNearbyBuses();
+                    },
+                    function(error) {
+                        console.error('Error getting location:', error);
+                        // Default to UCSC campus
+                        userLat = 36.9916;
+                        userLon = -122.0608;
+                        initializeMap();
+                        loadNearbyBuses();
+                    }
+                );
+            } else {
+                // Fallback to UCSC campus
+                userLat = 36.9916;
+                userLon = -122.0608;
+                initializeMap();
+                loadNearbyBuses();
             }
+        }
+        
+        function initializeMap() {
+            // Update location display
+            document.getElementById('userLocation').textContent = 
+                `${userLat.toFixed(4)}, ${userLon.toFixed(4)}`;
             
-            drivers.forEach(driver => {
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    <div class="driver-info">
-                        <strong>${driver.name}</strong><br>
-                        ETA: ${driver.eta} minutes<br>
-                        <button onclick="trackDriver('${driver.name}', ${stopLat}, ${stopLon})">Track This Driver</button>
-                    </div>
-                `;
-                driversListEl.appendChild(li);
+            // Initialize map centered on user location
+            map = L.map('map').setView([userLat, userLon], 13);
+            
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // Add user location marker
+            userMarker = L.marker([userLat, userLon], {
+                icon: L.divIcon({
+                    className: 'user-marker',
+                    html: '📍',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 30]
+                })
+            }).addTo(map);
+            
+            userMarker.bindPopup('<b>Your Location</b>').openPopup();
+        }
+        
+        async function loadNearbyBuses() {
+            try {
+                // Get all active buses from all routes
+                const response = await fetch('/api/metro/routes');
+                const routesData = await response.json();
+                
+                if (!routesData.success) {
+                    showError('Failed to load bus routes');
+                    return;
+                }
+                
+                let allBuses = [];
+                
+                // Get buses for each route
+                for (const route of routesData.routes) {
+                    const busResponse = await fetch(`/api/metro/routes/${route.routeId}/buses`);
+                    const busData = await busResponse.json();
+                    
+                    if (busData.success && busData.buses.length > 0) {
+                        busData.buses.forEach(bus => {
+                            bus.routeName = route.name;
+                            bus.routeId = route.routeId;
+                            bus.headway = route.headway;
+                            allBuses.push(bus);
+                        });
+                    }
+                }
+                
+                if (allBuses.length === 0) {
+                    document.getElementById('busesContainer').innerHTML = 
+                        '<div class="bus-info-panel"><p>No active buses found. Please try again later.</p></div>';
+                    return;
+                }
+                
+                // Calculate distances and sort by proximity
+                allBuses.forEach(bus => {
+                    bus.distance = calculateDistance(
+                        userLat, userLon,
+                        bus.location.latitude, bus.location.longitude
+                    );
+                    bus.eta = Math.max(1, Math.round((bus.distance / (bus.speed || 25)) * 60)); // ETA in minutes
+                });
+                
+                allBuses.sort((a, b) => a.distance - b.distance);
+                
+                // Display buses on map and in list
+                displayBusesOnMap(allBuses);
+                displayBusesList(allBuses);
+                
+            } catch (error) {
+                console.error('Error loading buses:', error);
+                showError('Error loading bus information');
+            }
+        }
+        
+        function displayBusesOnMap(buses) {
+            // Clear existing markers and lines
+            busMarkers.forEach(marker => map.removeLayer(marker));
+            routeLines.forEach(line => map.removeLayer(line));
+            busMarkers = [];
+            routeLines = [];
+            
+            buses.forEach((bus, index) => {
+                const isNearest = index === 0;
+                
+                // Create bus marker
+                const busIcon = L.divIcon({
+                    className: 'bus-marker',
+                    html: `<div style="background: ${isNearest ? '#28a745' : '#007bff'}; color: white; padding: 5px; border-radius: 50%; font-size: 12px; text-align: center; min-width: 30px; min-height: 30px; display: flex; align-items: center; justify-content: center;">🚌</div>`,
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20]
+                });
+                
+                const busMarker = L.marker([bus.location.latitude, bus.location.longitude], {
+                    icon: busIcon
+                }).addTo(map);
+                
+                busMarker.bindPopup(`
+                    <b>Route ${bus.routeId}: ${bus.routeName}</b><br>
+                    Bus ID: ${bus.busId}<br>
+                    Speed: ${bus.speed.toFixed(1)} km/h<br>
+                    Distance: ${bus.distance.toFixed(2)} km<br>
+                    ETA: ~${bus.eta} minutes
+                `);
+                
+                busMarkers.push(busMarker);
+                
+                // Draw line to nearest bus
+                if (isNearest) {
+                    const routeLine = L.polyline([
+                        [userLat, userLon],
+                        [bus.location.latitude, bus.location.longitude]
+                    ], {
+                        color: '#28a745',
+                        weight: 3,
+                        dashArray: '5, 10'
+                    }).addTo(map);
+                    
+                    routeLines.push(routeLine);
+                    
+                    // Fit map to show user and nearest bus
+                    const group = new L.featureGroup([userMarker, busMarker]);
+                    map.fitBounds(group.getBounds().pad(0.1));
+                }
             });
         }
         
-        // Track selected driver
-        function trackDriver(driverName, stopLat, stopLon) {
+        function displayBusesList(buses) {
+            const container = document.getElementById('busesContainer');
+            
+            container.innerHTML = buses.map((bus, index) => {
+                const isNearest = index === 0;
+                return `
+                    <div class="bus-info-panel ${isNearest ? 'nearest-bus' : ''}">
+                        <div class="bus-details">
+                            <div>
+                                <h4>Route ${bus.routeId}: ${bus.routeName} ${isNearest ? '⭐ NEAREST' : ''}</h4>
+                                <p><strong>Bus ID:</strong> ${bus.busId}</p>
+                                <p><strong>Distance:</strong> ${bus.distance.toFixed(2)} km</p>
+                                <p><strong>Speed:</strong> ${bus.speed.toFixed(1)} km/h</p>
+                                <p><strong>Frequency:</strong> Every ${bus.headway} minutes</p>
+                            </div>
+                            <button class="track-btn" onclick="trackBus('${bus.busId}', '${bus.routeId}')">
+                                Track Bus
+                            </button>
+                        </div>
+                        
+                        <div class="eta-display">
+                            <div class="eta-item eta-realtime">
+                                <strong>Real-Time ETA</strong><br>
+                                ~${bus.eta} minutes
+                            </div>
+                            <div class="eta-item eta-scheduled">
+                                <strong>Scheduled</strong><br>
+                                Every ${bus.headway} min
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth's radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+        
+        function trackBus(busId, routeId) {
             const params = new URLSearchParams({
-                driver: driverName,
-                stop_lat: stopLat,
-                stop_lon: stopLon
+                busId: busId,
+                routeId: routeId,
+                userLat: userLat,
+                userLon: userLon
             });
             
             window.location.href = `/track?${params.toString()}`;
         }
+        
+        function showError(message) {
+            document.getElementById('busesContainer').innerHTML = `
+                <div class="bus-info-panel" style="background: #f8d7da; color: #721c24;">
+                    <strong>Error:</strong> ${message}
+                </div>
+            `;
+        }
+        
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                loadNearbyBuses();
+            }
+        }, 30000);
     </script>
 </body>
 </html>

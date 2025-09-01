@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Login | SlugStop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/static/admin.css">
+</head>
+<body>
+    <div class="header">
+        Admin Login
+        <a href="/" class="home-btn">Home</a>
+    </div>
+    <form id="loginForm" onsubmit="return false;">
+        <div id="error" class="error" style="display: none;"></div>
+        <input type="text" id="name" name="name" placeholder="Admin Name" required>
+        <input type="text" id="code" name="code" placeholder="Admin Code" required>
+        <button type="button" onclick="submitLogin()">Access Dashboard</button>
+    </form>
+    <script>
+        async function submitLogin() {
+            const errorDiv = document.getElementById('error');
+            errorDiv.style.display = 'none';
+            
+            const formData = {
+                name: document.getElementById('name').value.trim(),
+                code: document.getElementById('code').value.trim()
+            };
+            
+            if (!formData.name || !formData.code) {
+                errorDiv.textContent = 'Please enter both name and code';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            try {
+                console.log('Attempting login with:', { name: formData.name, hasCode: !!formData.code });
+                
+                const response = await fetch('/admin/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(formData)
+                });
+                
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                // Handle specific error cases
+                if (data.error === 'Access token required') {
+                    errorDiv.textContent = 'Session expired. Please login again.';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+                
+                if (data.token) {
+                    console.log('Login successful, storing token');
+                    localStorage.setItem('adminToken', data.token);
+                    localStorage.setItem('adminUser', JSON.stringify(data.admin));
+                    window.location.href = '/admin/dashboard-page';
+                } else {
+                    errorDiv.textContent = data.error || 'Login failed. Please try again.';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                errorDiv.textContent = 'Login failed. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        }
+        
+        // Also handle form submission via Enter key
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitLogin();
+        });
+        
+        // Handle Enter key in input fields
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitLogin();
+            }
+        });
+    </script>
+</body>
+</html>
