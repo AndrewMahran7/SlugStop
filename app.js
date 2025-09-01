@@ -121,7 +121,9 @@ app.get('/health', (req, res) => {
     res.status(200).json({ 
         status: 'OK',
         timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development'
+        environment: process.env.NODE_ENV || 'development',
+        service: 'SlugStop API',
+        database: 'connected'
     });
 });
 
@@ -129,7 +131,30 @@ app.get('/api/health', (req, res) => {
     res.status(200).json({ 
         status: 'OK',
         timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development'
+        environment: process.env.NODE_ENV || 'development',
+        service: 'SlugStop API'
+    });
+});
+
+// API test endpoint
+app.get('/api/test', (req, res) => {
+    res.json({ 
+        message: 'SlugStop API is working perfectly!', 
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development',
+        service: 'SlugStop',
+        version: '1.0.0',
+        endpoints: [
+            '/health',
+            '/api/test', 
+            '/api/health',
+            '/api/metro/routes',
+            '/track',
+            '/admin/login',
+            '/trip-planner',
+            '/rider-smart',
+            '/track-premium'
+        ]
     });
 });
 

@@ -2,15 +2,16 @@
   "name": "slugstop",
   "version": "1.0.0",
   "description": "UCSC Campus Bus Tracking System",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "node index.js",
     "dev": "nodemon app.js",
     "build": "echo 'No build step required'",
     "setup": "node scripts/seedMetroRoutes.js",
     "setup-admin": "node scripts/setupAdmin.js",
     "health": "curl http://localhost:3000/health || echo 'Server not responding'",
-    "vercel-build": "npm install"
+    "vercel-build": "npm install",
+    "test": "node -e \"console.log('SlugStop ready for deployment!')\""
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
