@@ -4,13 +4,16 @@
   "description": "UCSC Campus Bus Tracking System",
   "main": "app.js",
   "scripts": {
-    "start": "NODE_ENV=production node app.js",
+    "start": "node app.js",
     "dev": "nodemon app.js",
+    "build": "echo 'No build step required'",
     "setup": "node scripts/seedMetroRoutes.js",
     "setup-admin": "node scripts/setupAdmin.js",
-    "health": "curl http://localhost:3000/health || echo 'Server not responding'"
+    "health": "curl http://localhost:3000/health || echo 'Server not responding'",
+    "vercel-build": "npm install"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
     "body-parser": "^1.20.2",
     "connect-mongo": "^5.1.0",
@@ -24,11 +27,14 @@
     "express-validator": "^7.2.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.17.0",
+    "mongoose": "^8.18.0",
     "winston": "^3.17.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": "18.x"
   },
   "keywords": [
     "bus",

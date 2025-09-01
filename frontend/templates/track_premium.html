@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Bus Tracking | SlugStop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/static/track_premium.css">
+</head>
+<body>
+    <div class="tracking-app">
+        <!-- Header -->
+        <header class="tracking-header">
+            <div class="header-content">
+                <button class="back-btn" onclick="window.history.back()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="header-info">
+                    <h1 class="route-title">Route <span id="routeNumber">--</span></h1>
+                    <p class="route-subtitle" id="routeName">Loading route information...</p>
+                </div>
+                <div class="header-actions">
+                    <button class="header-btn" id="notificationBtn">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <button class="header-btn" id="shareBtn">
+                        <i class="fas fa-share"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div class="status-item">
+                    <span class="status-indicator live" id="liveStatus"></span>
+                    <span class="status-text">Live Tracking</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-clock"></i>
+                    <span id="lastUpdate">Just now</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-users"></i>
+                    <span id="busCapacity">Moderate</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- ETA Cards -->
+        <div class="eta-section">
+            <div class="eta-cards">
+                <div class="eta-card primary">
+                    <div class="eta-icon">
+                        <i class="fas fa-satellite-dish"></i>
+                    </div>
+                    <div class="eta-content">
+                        <div class="eta-value" id="realTimeETA">--</div>
+                        <div class="eta-label">Real-Time ETA</div>
+                        <div class="eta-sublabel">GPS + Traffic</div>
+                    </div>
+                    <div class="eta-trend" id="etaTrend">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                </div>
+                
+                <div class="eta-card secondary">
+                    <div class="eta-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="eta-content">
+                        <div class="eta-value" id="scheduledETA">--</div>
+                        <div class="eta-label">Scheduled</div>
+                        <div class="eta-sublabel">Original time</div>
+                    </div>
+                    <div class="schedule-status" id="scheduleStatus">
+                        <span class="status-badge on-time">On Time</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="quick-btn" id="nextBusBtn">
+                    <i class="fas fa-fast-forward"></i>
+                    <span>Next Bus</span>
+                </button>
+                <button class="quick-btn" id="routeInfoBtn">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Route Info</span>
+                </button>
+                <button class="quick-btn" id="alternativesBtn">
+                    <i class="fas fa-route"></i>
+                    <span>Alternatives</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div class="map-container">
+            <div id="map" class="premium-map"></div>
+            
+            <!-- Map Controls -->
+            <div class="map-controls">
+                <button class="map-control-btn" id="followBusBtn" title="Follow Bus">
+                    <i class="fas fa-crosshairs"></i>
+                </button>
+                <button class="map-control-btn" id="centerUserBtn" title="Center on Me">
+                    <i class="fas fa-location-arrow"></i>
+                </button>
+                <button class="map-control-btn" id="fullscreenBtn" title="Fullscreen">
+                    <i class="fas fa-expand"></i>
+                </button>
+            </div>
+            
+            <!-- Map Overlay Info -->
+            <div class="map-overlay" id="busInfoOverlay">
+                <div class="overlay-content">
+                    <h3>Bus Information</h3>
+                    <div class="bus-details">
+                        <div class="detail-item">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Speed: <span id="busSpeed">-- mph</span></span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-route"></i>
+                            <span>Next Stop: <span id="nextStop">--</span></span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-walking"></i>
+                            <span>Distance: <span id="walkingDistance">--</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stop Information -->
+        <div class="stops-section">
+            <div class="section-header">
+                <h2><i class="fas fa-map-marker-alt"></i> Upcoming Stops</h2>
+                <button class="view-all-btn" id="viewAllStopsBtn">
+                    View All <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            
+            <div class="stops-timeline" id="stopsTimeline">
+                <!-- Dynamic content will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Smart Notifications -->
+        <div class="notifications-section">
+            <div class="notification-card">
+                <div class="notification-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div class="notification-content">
+                    <h3>Smart Notifications</h3>
+                    <p>Get notified when your bus is 5 minutes away</p>
+                    <button class="btn btn-primary" id="enableNotificationsBtn">
+                        <i class="fas fa-bell"></i>
+                        Enable Notifications
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Action Sheet -->
+    <div class="action-sheet hidden" id="actionSheet">
+        <div class="action-sheet-header">
+            <div class="sheet-handle"></div>
+            <button class="close-sheet-btn" id="closeActionSheet">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="action-sheet-content" id="actionSheetContent">
+            <!-- Dynamic content -->
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner">
+                <i class="fas fa-bus"></i>
+            </div>
+            <h3>Tracking Your Bus</h3>
+            <p>Connecting to live GPS data...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast hidden" id="toast">
+        <div class="toast-content">
+            <i class="toast-icon"></i>
+            <span class="toast-message"></span>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/static/track_premium.js"></script>
+</body>
+</html>

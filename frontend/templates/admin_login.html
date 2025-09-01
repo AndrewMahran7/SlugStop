@@ -12,8 +12,8 @@
     </div>
     <form id="loginForm" onsubmit="return false;">
         <div id="error" class="error" style="display: none;"></div>
-        <input type="text" id="name" name="name" placeholder="Admin Name" required>
-        <input type="text" id="code" name="code" placeholder="Admin Code" required>
+        <input type="email" id="name" name="name" placeholder="Admin Email" required>
+        <input type="password" id="code" name="code" placeholder="Password" required>
         <button type="button" onclick="submitLogin()">Access Dashboard</button>
     </form>
     <script>
@@ -22,20 +22,20 @@
             errorDiv.style.display = 'none';
             
             const formData = {
-                name: document.getElementById('name').value.trim(),
-                code: document.getElementById('code').value.trim()
+                email: document.getElementById('name').value.trim(),
+                password: document.getElementById('code').value.trim()
             };
             
-            if (!formData.name || !formData.code) {
-                errorDiv.textContent = 'Please enter both name and code';
+            if (!formData.email || !formData.password) {
+                errorDiv.textContent = 'Please enter both email and password';
                 errorDiv.style.display = 'block';
                 return;
             }
             
             try {
-                console.log('Attempting login with:', { name: formData.name, hasCode: !!formData.code });
+                console.log('Attempting login with:', { email: formData.email, hasPassword: !!formData.password });
                 
-                const response = await fetch('/admin/login', {
+                const response = await fetch('/admin/auth/login', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(formData)

@@ -19,6 +19,7 @@ const { sanitizeInput } = require('./middleware/validation');
 const locationRoutes = require('./routes/location');
 const trackRoutes = require('./routes/track');
 const adminRoutes = require('./routes/admin');
+const { router: adminAuthRoutes } = require('./routes/admin_auth');
 const riderRoutes = require('./routes/rider');
 const driverRoutes = require('./routes/driver');
 const metroRoutes = require('./routes/metro');
@@ -87,12 +88,14 @@ app.use(session({
     saveUninitialized: false,
     store: MongoStore.create({
         mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/slugstop',
-        touchAfter: 24 * 3600 // lazy session update
+        touchAfter: 24 * 3600, // lazy session update
+        ttl: 24 * 60 * 60 // 24 hours TTL for sessions
     }),
     cookie: { 
         secure: process.env.NODE_ENV === 'production', // HTTPS only in production
         httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // Allow cross-site cookies in production
     }
 }));
 
@@ -107,6 +110,7 @@ app.engine('html', require('ejs').renderFile);
 // API Routes
 app.use('/api/location', locationRoutes);
 app.use('/api/track', trackRoutes);
+app.use('/admin', adminAuthRoutes);  // Put auth routes first
 app.use('/admin', adminRoutes);
 app.use('/api/rider', riderRoutes);
 app.use('/api/driver', driverRoutes);
@@ -150,7 +154,11 @@ app.get('/driver-dashboard', (req, res) => {
 
 // Rider routes
 app.get('/rider', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend/templates/rider_get_location.html'));
+  res.sendFile(path.join(__dirname, 'frontend/templates/rider_smart.html'));
+});
+
+app.get('/trip-planner', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend/templates/trip_planner.html'));
 });
 
 app.get('/rider-select', (req, res) => {
@@ -158,12 +166,23 @@ app.get('/rider-select', (req, res) => {
 });
 
 app.get('/track', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend/templates/track.html'));
+  res.sendFile(path.join(__dirname, 'frontend/templates/track_premium.html'));
 });
 
 // METRO routes information
 app.get('/metro', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend/templates/metro_routes.html'));
+});
+
+// PWA Manifest
+app.get('/manifest.json', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend/static/manifest.json'));
+});
+
+// Service Worker
+app.get('/sw.js', (req, res) => {
+  res.setHeader('Content-Type', 'text/javascript');
+  res.sendFile(path.join(__dirname, 'frontend/static/sw.js'));
 });
 
 // Handle Chrome DevTools request silently
@@ -188,6 +207,15 @@ app.use('*', (req, res) => {
     res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
-  logger.info(`Server is running on http://localhost:${PORT}`);
-});
+// Export for Vercel serverless deployment
+module.exports = app;
+
+// Only start server if not in serverless environment
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    app.listen(PORT, () => {
+        logger.info(`Server is running on http://localhost:${PORT}`, { 
+            service: 'slugstop',
+            environment: process.env.NODE_ENV || 'development'
+        });
+    });
+}

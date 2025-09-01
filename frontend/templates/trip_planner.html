@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Planner | SlugStop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/static/trip_planner.css">
+</head>
+<body>
+    <div class="trip-planner-app">
+        <!-- Header -->
+        <header class="planner-header">
+            <div class="header-content">
+                <button class="back-btn" onclick="window.location.href='/'">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="header-title">
+                    <h1>Trip Planner</h1>
+                    <p>Smart multi-modal journey planning</p>
+                </div>
+                <button class="swap-btn" id="swapLocationsBtn">
+                    <i class="fas fa-exchange-alt"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Trip Planning Form -->
+        <div class="planning-section">
+            <!-- Location Inputs -->
+            <div class="location-inputs">
+                <div class="location-input-group">
+                    <div class="location-marker from">
+                        <i class="fas fa-circle"></i>
+                    </div>
+                    <div class="input-container">
+                        <input type="text" id="fromLocation" placeholder="From: Your location" class="location-input">
+                        <button class="location-btn" id="useCurrentLocationBtn">
+                            <i class="fas fa-crosshairs"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="location-input-group">
+                    <div class="location-marker to">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="input-container">
+                        <input type="text" id="toLocation" placeholder="To: Choose destination" class="location-input">
+                        <button class="location-btn" id="chooseFavoriteBtn">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Time and Preferences -->
+            <div class="trip-options">
+                <div class="time-selector">
+                    <div class="time-option active" data-time="now">
+                        <i class="fas fa-clock"></i>
+                        <span>Leave Now</span>
+                    </div>
+                    <div class="time-option" data-time="depart">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Depart At</span>
+                    </div>
+                    <div class="time-option" data-time="arrive">
+                        <i class="fas fa-flag-checkered"></i>
+                        <span>Arrive By</span>
+                    </div>
+                </div>
+                
+                <div class="datetime-picker hidden" id="datetimePicker">
+                    <input type="datetime-local" id="tripDateTime" class="datetime-input">
+                </div>
+
+                <!-- Travel Preferences -->
+                <div class="preferences">
+                    <div class="preference-item">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <label>
+                            <input type="radio" name="preference" value="fastest" checked>
+                            <span>Fastest Route</span>
+                        </label>
+                    </div>
+                    <div class="preference-item">
+                        <i class="fas fa-walking"></i>
+                        <label>
+                            <input type="radio" name="preference" value="least-walking">
+                            <span>Least Walking</span>
+                        </label>
+                    </div>
+                    <div class="preference-item">
+                        <i class="fas fa-exchange-alt"></i>
+                        <label>
+                            <input type="radio" name="preference" value="fewest-transfers">
+                            <span>Fewest Transfers</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plan Trip Button -->
+            <button class="plan-trip-btn" id="planTripBtn">
+                <i class="fas fa-route"></i>
+                <span>Plan My Trip</span>
+                <div class="btn-shimmer"></div>
+            </button>
+        </div>
+
+        <!-- Trip Results -->
+        <div class="results-section hidden" id="resultsSection">
+            <div class="results-header">
+                <h2><i class="fas fa-map-marked-alt"></i> Trip Options</h2>
+                <div class="results-filters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="bus">Bus Only</button>
+                    <button class="filter-btn" data-filter="mixed">Mixed</button>
+                </div>
+            </div>
+            
+            <div class="trip-options-list" id="tripOptionsList">
+                <!-- Dynamic content will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Interactive Map -->
+        <div class="map-section" id="mapSection">
+            <div class="map-container">
+                <div id="tripMap" class="trip-map"></div>
+                <div class="map-controls">
+                    <button class="map-control-btn" id="centerRouteBtn">
+                        <i class="fas fa-route"></i>
+                    </button>
+                    <button class="map-control-btn" id="layersBtn">
+                        <i class="fas fa-layer-group"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions-section">
+            <h3><i class="fas fa-lightning-bolt"></i> Quick Trips</h3>
+            <div class="quick-actions-grid">
+                <button class="quick-action-card" data-destination="campus">
+                    <div class="quick-icon">🎓</div>
+                    <span>To Campus</span>
+                </button>
+                <button class="quick-action-card" data-destination="downtown">
+                    <div class="quick-icon">🏢</div>
+                    <span>Downtown</span>
+                </button>
+                <button class="quick-action-card" data-destination="airport">
+                    <div class="quick-icon">✈️</div>
+                    <span>Airport</span>
+                </button>
+                <button class="quick-action-card" data-destination="beach">
+                    <div class="quick-icon">🏖️</div>
+                    <span>Beach</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Recent Trips -->
+        <div class="recent-trips-section" id="recentTripsSection">
+            <h3><i class="fas fa-history"></i> Recent Trips</h3>
+            <div class="recent-trips-list" id="recentTripsList">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner">
+                <i class="fas fa-route"></i>
+            </div>
+            <h3>Planning Your Trip</h3>
+            <p>Finding the best routes...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast hidden" id="toast">
+        <div class="toast-content">
+            <i class="toast-icon"></i>
+            <span class="toast-message"></span>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/static/trip_planner.js"></script>
+</body>
+</html>

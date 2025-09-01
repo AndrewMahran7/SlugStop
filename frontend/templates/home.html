@@ -3,19 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SlugStop | UCSC Bus Tracking</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>SlugStop | Premium Transit Intelligence Platform</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Real-time Santa Cruz METRO tracking with intelligent ETAs and trip planning">
+    <meta name="theme-color" content="#764ba2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SlugStop">
+    
+    <!-- PWA Links -->
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    
+    <!-- Fonts and Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/home.css">
 </head>
 <body>
-    <div class="logo">🚌</div>
-    <div class="title">SlugStop</div>
-    <div class="subtitle">UCSC Campus Bus Tracking</div>
-    <div class="card">
-        <a href="/driver-login" class="btn">I'm a Driver</a>
-        <a href="/rider" class="btn">I'm a Rider</a>
-        <a href="/metro" class="btn">🚌 METRO Routes</a>
-        <a href="/admin" class="btn">Admin</a>
+    <div class="hero-container">
+        <div class="background-pattern"></div>
+        <div class="glass-overlay"></div>
+        <div class="content-wrapper">
+            <div class="brand-section">
+                <div class="logo">
+                    <i class="fas fa-bus"></i>
+                </div>
+                <h1 class="title">SlugStop</h1>
+                <p class="subtitle">Premium Transit Intelligence Platform</p>
+                <p class="description">Real-time Santa Cruz METRO tracking with intelligent ETAs</p>
+            </div>
+            
+            <!-- PWA Install Banner -->
+            <div class="pwa-banner hidden" id="pwaBanner">
+                <div class="banner-content">
+                    <i class="fas fa-mobile-alt"></i>
+                    <div class="banner-text">
+                        <h3>Install SlugStop</h3>
+                        <p>Get the full app experience with offline support</p>
+                    </div>
+                    <button class="btn-install" id="installBtn">Install</button>
+                    <button class="btn-dismiss" id="dismissBtn">×</button>
+                </div>
+            </div>
+            
+            <div class="action-grid">
+                <a href="/rider" class="action-card primary" data-role="rider" data-track="navigation" data-destination="rider">
+                    <div class="card-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Find My Bus</h3>
+                        <p>Smart tracking with real-time locations</p>
+                        <span class="card-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </div>
+                    <div class="card-shimmer"></div>
+                </a>
+                
+                <a href="/trip-planner" class="action-card featured" data-role="planner" data-track="navigation" data-destination="trip-planner">
+                    <div class="card-icon">
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Trip Planner</h3>
+                        <p>Multi-modal journey planning</p>
+                        <span class="card-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </div>
+                    <div class="card-shimmer"></div>
+                    <div class="featured-badge">NEW</div>
+                </a>
+                
+                <a href="/driver-login" class="action-card" data-role="driver" data-track="navigation" data-destination="driver">
+                    <div class="card-icon">
+                        <i class="fas fa-steering-wheel"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Driver Portal</h3>
+                        <p>Professional driver dashboard</p>
+                        <span class="card-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </div>
+                    <div class="card-shimmer"></div>
+                </a>
+                
+                <a href="/metro" class="action-card" data-role="routes" data-track="navigation" data-destination="metro">
+                    <div class="card-icon">
+                        <i class="fas fa-list-alt"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>METRO Routes</h3>
+                        <p>Complete Santa Cruz transit network</p>
+                        <span class="card-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </div>
+                    <div class="card-shimmer"></div>
+                </a>
+                
+                <a href="/admin" class="action-card admin" data-role="admin" data-track="navigation" data-destination="admin">
+                    <div class="card-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Administration</h3>
+                        <p>System management portal</p>
+                        <span class="card-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </div>
+                    <div class="card-shimmer"></div>
+                </a>
+            </div>
+            
+            <!-- Personalized Recommendations -->
+            <div class="recommendations-section hidden" id="personalizedRecommendations">
+                <h2><i class="fas fa-magic"></i> For You</h2>
+                <div class="recommendations-grid" id="recommendationsGrid">
+                    <!-- Dynamic content from analytics -->
+                </div>
+            </div>
+            
+            <div class="features-section">
+                <div class="feature-item">
+                    <i class="fas fa-satellite-dish"></i>
+                    <span>Real-time GPS Tracking</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-brain"></i>
+                    <span>Intelligent ETA Predictions</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>Progressive Web App</span>
+                </div>
+            </div>
+        </div>
     </div>
+    
+    <!-- Load Analytics and PWA functionality -->
+    <script src="/static/analytics.js"></script>
+    <script>
+        // PWA Installation
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('pwaBanner').classList.remove('hidden');
+        });
+        
+        document.getElementById('installBtn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                SlugStopAnalytics.trackEvent('pwa_install_prompt', { outcome });
+                deferredPrompt = null;
+            }
+            document.getElementById('pwaBanner').classList.add('hidden');
+        });
+        
+        document.getElementById('dismissBtn').addEventListener('click', () => {
+            document.getElementById('pwaBanner').classList.add('hidden');
+            SlugStopAnalytics.trackEvent('pwa_install_dismissed');
+        });
+        
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('/static/sw.js');
+                    console.log('SW registered: ', registration);
+                    SlugStopAnalytics.trackEvent('service_worker_registered');
+                } catch (registrationError) {
+                    console.log('SW registration failed: ', registrationError);
+                    SlugStopAnalytics.trackEvent('service_worker_failed', { error: registrationError.message });
+                }
+            });
+        }
+        
+        // Analytics Integration
+        window.addEventListener('slugstop:insights', (event) => {
+            const { recommendations } = event.detail;
+            
+            if (recommendations.favoriteRoutes.length > 0) {
+                showPersonalizedRecommendations(recommendations);
+            }
+        });
+        
+        function showPersonalizedRecommendations(recommendations) {
+            const section = document.getElementById('personalizedRecommendations');
+            const grid = document.getElementById('recommendationsGrid');
+            
+            const html = recommendations.favoriteRoutes.slice(0, 3).map(route => `
+                <div class="recommendation-card" data-route="${route.routeId}">
+                    <i class="fas fa-star"></i>
+                    <h3>Route ${route.routeId}</h3>
+                    <p>Used ${route.usageCount} times</p>
+                    <button class="btn-track" onclick="trackFavoriteRoute('${route.routeId}')">Track Now</button>
+                </div>
+            `).join('');
+            
+            grid.innerHTML = html;
+            section.classList.remove('hidden');
+        }
+        
+        function trackFavoriteRoute(routeId) {
+            SlugStopAnalytics.trackEvent('favorite_route_tracked', { routeId });
+            window.location.href = `/track?route=${routeId}`;
+        }
+        
+        // Interactive animations
+        document.querySelectorAll('.action-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+        
+        // Shimmer effect trigger
+        setInterval(() => {
+            document.querySelectorAll('.card-shimmer').forEach((shimmer, index) => {
+                setTimeout(() => {
+                    shimmer.style.animation = 'none';
+                    shimmer.offsetHeight; // Trigger reflow
+                    shimmer.style.animation = 'shimmer 2s ease-in-out';
+                }, index * 200);
+            });
+        }, 8000);
+        
+        // Track page load
+        SlugStopAnalytics.trackEvent('home_page_loaded', {
+            loadTime: performance.now(),
+            userAgent: navigator.userAgent
+        });
+    </script>
 </body>
 </html>
